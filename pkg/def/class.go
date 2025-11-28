@@ -1,7 +1,5 @@
 package def
 
-import "github.com/julwrites/BotPlatform/pkg/secrets"
-
 // Struct definitions for bot
 
 type UserData struct {
@@ -39,7 +37,6 @@ type ResponseData struct {
 }
 
 type SessionData struct {
-	Secrets      secrets.SecretsData
 	Type         string
 	Channel      string
 	User         UserData
