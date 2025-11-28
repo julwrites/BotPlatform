@@ -24,7 +24,14 @@ func GenerateTestData() []byte {
 
 func TestTelegramTranslate(t *testing.T) {
 	data := GenerateTestData()
-	env := TelegramTranslate(data)
+
+	// Create a telegram instance (secrets don't matter for translate)
+	tg := NewTelegram("token", "admin")
+	env, err := tg.Translate(data)
+
+	if err != nil {
+		t.Errorf("Failed TestTelegramTranslate: %v", err)
+	}
 
 	if env.Type != def.TYPE_TELEGRAM {
 		t.Errorf("Failed TestTelegramTranslate, Type is wrong")

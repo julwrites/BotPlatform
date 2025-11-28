@@ -12,7 +12,21 @@ import (
 	"github.com/julwrites/BotPlatform/pkg/def"
 )
 
-// Classes
+// Telegram Implementation
+
+type Telegram struct {
+	BotToken string
+	AdminID  string
+}
+
+func NewTelegram(botToken string, adminID string) *Telegram {
+	return &Telegram{
+		BotToken: botToken,
+		AdminID:  adminID,
+	}
+}
+
+// Structs for Telegram API
 
 type TelegramSender struct {
 	Id        int    `json:"id"`
@@ -89,9 +103,9 @@ type TelegramRemovePost struct {
 	Markup RemoveMarkup `json:"reply_markup"`
 }
 
-// Translate to properties
+// Translate from Telegram Payload
 
-func TelegramTranslate(body []byte) def.SessionData {
+func (t *Telegram) Translate(body []byte) (def.SessionData, error) {
 	log.Printf("Parsing Telegram message")
 
 	var env def.SessionData
@@ -101,7 +115,7 @@ func TelegramTranslate(body []byte) def.SessionData {
 	err := json.Unmarshal(body, &data)
 	if err != nil {
 		log.Printf("Failed to unmarshal request body: %v", err)
-		return env
+		return env, err
 	}
 
 	env.User.Firstname = data.Message.Sender.Firstname
@@ -115,7 +129,7 @@ func TelegramTranslate(body []byte) def.SessionData {
 	log.Printf("User: %s %s | %s : %s", env.User.Firstname, env.User.Lastname, env.User.Username, env.User.Id)
 
 	tokens := strings.Split(data.Message.Text, " ")
-	if strings.Index(tokens[0], "/") == 0 {
+	if len(tokens) > 0 && strings.HasPrefix(tokens[0], "/") {
 		env.Msg.Command = string((tokens[0])[1:])                                                   // Get the first token and strip off the prefix
 		data.Message.Text = strings.Trim(strings.Replace(data.Message.Text, tokens[0], "", 1), " ") // Replace the command
 	}
@@ -126,10 +140,10 @@ func TelegramTranslate(body []byte) def.SessionData {
 
 	log.Printf("Message: %s | %s", env.Msg.Command, env.Msg.Message)
 
-	return env
+	return env, nil
 }
 
-// Translate to Telegram
+// Helpers for Posting
 
 func HasOptions(env def.SessionData) bool {
 	return len(env.Res.Affordances.Options) > 0 || env.Res.Affordances.Remove
@@ -145,6 +159,10 @@ func PrepTelegramInlineKeyboard(options []def.Option) [][]InlineButton {
 			buttonRow = []InlineButton{}
 		}
 	}
+	// Append any leftover buttons
+	if len(buttonRow) > 0 {
+		buttons = append(buttons, buttonRow)
+	}
 
 	return buttons
 }
@@ -158,6 +176,10 @@ func PrepTelegramKeyboard(options []def.Option) [][]KeyButton {
 			buttons = append(buttons, buttonRow)
 			buttonRow = []KeyButton{}
 		}
+	}
+	// Append any leftover buttons
+	if len(buttonRow) > 0 {
+		buttons = append(buttons, buttonRow)
 	}
 
 	return buttons
@@ -216,12 +238,17 @@ func PostTelegramMessage(data []byte, telegramId string) bool {
 		log.Printf("Error occurred during post: %v", postErr)
 		return false
 	}
+	if res != nil {
+		defer res.Body.Close()
+	}
 
 	log.Printf("Posted message %s, response %v", string(data), res)
 	return true
 }
 
-func PostTelegram(env def.SessionData) bool {
+// Post to Telegram
+
+func (t *Telegram) Post(env def.SessionData) bool {
 	var text string
 	var parseMode string
 	if env.Res.ParseMode == def.TELEGRAM_PARSE_MODE_HTML {
@@ -239,11 +266,11 @@ func PostTelegram(env def.SessionData) bool {
 	base.ParseMode = parseMode
 	base.ReplyId = env.Msg.Id
 
-	// After removing, everything else can continue as per normal
 	for _, chunk := range chunks {
 		base.Text = chunk
 		data := PrepTelegramMessage(base, env)
-		PostTelegramMessage(data, env.Secrets.TELEGRAM_ID)
+		// Use t.BotToken instead of env.Secrets.TELEGRAM_ID
+		PostTelegramMessage(data, t.BotToken)
 	}
 
 	return true
