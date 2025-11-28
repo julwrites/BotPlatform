@@ -34,6 +34,7 @@ type ResponseOptions struct {
 
 type ResponseData struct {
 	Message     string
+	ParseMode   string
 	Affordances ResponseOptions
 }
 
