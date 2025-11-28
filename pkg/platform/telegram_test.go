@@ -59,9 +59,26 @@ func TestPrepTelegramMessage(t *testing.T) {
 	var post TelegramPost
 
 	post.Text = "Text"
-	post.ParseMode = def.TELEGRAM_PARSE_MODE
+	post.ParseMode = def.TELEGRAM_PARSE_MODE_MD
 	post.Id = "1234"
 	post.ReplyId = "4567"
+
+	{
+		var env def.SessionData
+		env.Res.ParseMode = def.TELEGRAM_PARSE_MODE_HTML
+		if env.Res.ParseMode != "HTML" {
+			t.Errorf("Failed TestPrepTelegramMessage ParseMode check")
+		}
+
+		postHTML := post
+		postHTML.ParseMode = def.TELEGRAM_PARSE_MODE_HTML
+		data := PrepTelegramMessage(postHTML, env)
+		var result TelegramPost
+		json.Unmarshal(data, &result)
+		if result.ParseMode != "HTML" {
+			t.Errorf("Failed TestPrepTelegramMessage HTML ParseMode")
+		}
+	}
 
 	{
 		var env def.SessionData

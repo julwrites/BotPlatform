@@ -222,13 +222,21 @@ func PostTelegramMessage(data []byte, telegramId string) bool {
 }
 
 func PostTelegram(env def.SessionData) bool {
-	text := Format(env.Res.Message, TelegramPreprocessing, TelegramBold, TelegramItalics, TelegramSuperscript)
+	var text string
+	var parseMode string
+	if env.Res.ParseMode == def.TELEGRAM_PARSE_MODE_HTML {
+		text = env.Res.Message
+		parseMode = def.TELEGRAM_PARSE_MODE_HTML
+	} else {
+		text = Format(env.Res.Message, TelegramPreprocessing, TelegramBold, TelegramItalics, TelegramSuperscript)
+		parseMode = def.TELEGRAM_PARSE_MODE_MD
+	}
 
 	chunks := Split(text, "\n", 4000)
 
 	var base TelegramPost
 	base.Id = env.User.Id
-	base.ParseMode = def.TELEGRAM_PARSE_MODE
+	base.ParseMode = parseMode
 	base.ReplyId = env.Msg.Id
 
 	// After removing, everything else can continue as per normal
