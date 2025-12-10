@@ -8,8 +8,6 @@ type UserData struct {
 	Username  string
 	Id        string
 	Type      string // Group/Individual
-	Action    string // Current action if any
-	Config    string
 }
 
 type MessageData struct {
@@ -25,9 +23,10 @@ type Option struct {
 }
 
 type ResponseOptions struct {
-	Inline  bool
-	Options []Option
-	Remove  bool
+	Inline   bool
+	Options  []Option
+	Remove   bool
+	ColWidth int
 }
 
 type ResponseData struct {
