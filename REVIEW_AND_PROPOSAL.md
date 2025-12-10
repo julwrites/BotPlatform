@@ -64,6 +64,22 @@ Since `BotPlatform` will be modifying its public API (struct definitions), `Scri
 4.  **Update Dependencies**:
     *   Update `go.mod` to point to the new version of `BotPlatform`.
 
-## 4. Conclusion
+## 4. Migration Impact Analysis
+
+### Will this affect existing users?
+**No, the data for existing users will remain intact and accessible.**
+
+*   **Data Compatibility**: The Google Cloud Datastore Go client defaults to using the struct field name as the property name if no `datastore` tag is present. Since the original tags were empty (`datastore:""`), they also implied using the field name. Therefore, `Firstname string` is storage-compatible with `Firstname string `datastore:""``.
+*   **Data Migration**: No *data* migration (modifying rows in the database) is required.
+
+### Do we need a migration task?
+**Yes, a *Code Migration* task is required.**
+
+While the data is safe, the `ScriptureBot` code **must** be updated when it upgrades to this new version of `BotPlatform`.
+
+*   **Why?** `ScriptureBot` currently relies on the tags being present in the imported struct. Once those tags are removed from `BotPlatform`, `ScriptureBot` needs to define its own struct with the appropriate tags to ensure explicit control over its data schema and to avoid relying on implicit behavior (defaulting to field names).
+*   **Task**: Implement the "Define Local User Model" step outlined in Section 3 above. This ensures that `ScriptureBot` owns its persistence layer logic completely.
+
+## 5. Conclusion
 
 This refactoring separates the concerns of "Platform Integration" (Telegram, Discord) from "Business Logic & Storage" (ScriptureBot). `BotPlatform` becomes a lightweight translation layer, and `ScriptureBot` retains full control over its data persistence and application context.
