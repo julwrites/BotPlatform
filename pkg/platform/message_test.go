@@ -12,11 +12,22 @@ func TestSplit(t *testing.T) {
 	if len(chunks) != 4 {
 		t.Errorf(fmt.Sprintf("Failed TestSplit multiple chunks scenario, got %d instead of 4", len(chunks)))
 	}
+	if chunks[0] != "This is a block of " {
+		t.Errorf(fmt.Sprintf("Failed TestSplit content check, got '%s'", chunks[0]))
+	}
 
 	mono := Split("This is a block of text that has been delimited by spaces and nothing else", " ", 100)
 
 	if len(mono) != 1 {
 		t.Errorf("Failed TestSplit single chunk scenario")
+	}
+
+	newlines := Split("Line1\nLine2\nLine3", "\n", 100)
+	if len(newlines) != 1 {
+		t.Errorf("Failed TestSplit newlines scenario, got %d chunks", len(newlines))
+	}
+	if newlines[0] != "Line1\nLine2\nLine3" {
+		t.Errorf("Failed TestSplit newlines content, got %q", newlines[0])
 	}
 }
 
