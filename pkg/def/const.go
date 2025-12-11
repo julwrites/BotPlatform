@@ -11,3 +11,6 @@ const FIELD_USER = "USER"
 const FIELD_MESSAGE = "MESSAGE"
 
 const KEYBOARD_WIDTH = 1
+
+const TYPE_GROUP = "Group"
+const TYPE_INDIVIDUAL = "Individual"

@@ -124,8 +124,11 @@ func (t *Telegram) Translate(body []byte) (def.SessionData, error) {
 	env.User.Username = data.Message.Sender.Username
 	env.User.Id = strconv.Itoa(data.Message.Sender.Id)
 
-	// TODO: Implement support for groups
-	// env.User.Type = data.Message.Sender.Title
+	if data.Message.Chat.Type == "group" || data.Message.Chat.Type == "supergroup" {
+		env.User.Type = def.TYPE_GROUP
+	} else {
+		env.User.Type = def.TYPE_INDIVIDUAL
+	}
 
 	log.Printf("User: %s %s | %s : %s", env.User.Firstname, env.User.Lastname, env.User.Username, env.User.Id)
 
