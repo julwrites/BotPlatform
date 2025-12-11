@@ -4,9 +4,13 @@ const TYPE_TELEGRAM = "TELEGRAM"
 
 const TELEGRAM_FIELD_USER = "username"
 const TELEGRAM_FIELD_MESSAGE = "text"
-const TELEGRAM_PARSE_MODE = "MarkdownV2"
+const TELEGRAM_PARSE_MODE_MD = "MarkdownV2"
+const TELEGRAM_PARSE_MODE_HTML = "HTML"
 
 const FIELD_USER = "USER"
 const FIELD_MESSAGE = "MESSAGE"
 
 const KEYBOARD_WIDTH = 1
+
+const TYPE_GROUP = "Group"
+const TYPE_INDIVIDUAL = "Individual"

@@ -14,12 +14,11 @@ func Split(msg string, delim string, maxSize int) []string {
 	var chunk string
 	for _, para := range paragraphs {
 		if len(chunk)+len(para) < maxSize {
-			var group []string
-			group = append(group, chunk)
-			group = append(group, para)
-			chunk = strings.Join(group, delim)
+			chunk += para
 		} else {
-			splits = append(splits, chunk)
+			if len(chunk) > 0 {
+				splits = append(splits, chunk)
+			}
 			chunk = para
 		}
 	}

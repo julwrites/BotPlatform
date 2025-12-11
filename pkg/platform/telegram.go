@@ -12,7 +12,21 @@ import (
 	"github.com/julwrites/BotPlatform/pkg/def"
 )
 
-// Classes
+// Telegram Implementation
+
+type Telegram struct {
+	BotToken string
+	AdminID  string
+}
+
+func NewTelegram(botToken string, adminID string) *Telegram {
+	return &Telegram{
+		BotToken: botToken,
+		AdminID:  adminID,
+	}
+}
+
+// Structs for Telegram API
 
 type TelegramSender struct {
 	Id        int    `json:"id"`
@@ -89,19 +103,20 @@ type TelegramRemovePost struct {
 	Markup RemoveMarkup `json:"reply_markup"`
 }
 
-// Translate to properties
+// Translate from Telegram Payload
 
-func TelegramTranslate(body []byte) def.SessionData {
+func (t *Telegram) Translate(body []byte) (def.SessionData, error) {
 	log.Printf("Parsing Telegram message")
 
 	var env def.SessionData
 	env.Type = def.TYPE_TELEGRAM
+	env.Props = make(map[string]interface{})
 
 	var data TelegramRequest
 	err := json.Unmarshal(body, &data)
 	if err != nil {
 		log.Printf("Failed to unmarshal request body: %v", err)
-		return env
+		return env, err
 	}
 
 	env.User.Firstname = data.Message.Sender.Firstname
@@ -109,13 +124,16 @@ func TelegramTranslate(body []byte) def.SessionData {
 	env.User.Username = data.Message.Sender.Username
 	env.User.Id = strconv.Itoa(data.Message.Sender.Id)
 
-	// TODO: Implement support for groups
-	// env.User.Type = data.Message.Sender.Title
+	if data.Message.Chat.Type == "group" || data.Message.Chat.Type == "supergroup" {
+		env.User.Type = def.TYPE_GROUP
+	} else {
+		env.User.Type = def.TYPE_INDIVIDUAL
+	}
 
 	log.Printf("User: %s %s | %s : %s", env.User.Firstname, env.User.Lastname, env.User.Username, env.User.Id)
 
 	tokens := strings.Split(data.Message.Text, " ")
-	if strings.Index(tokens[0], "/") == 0 {
+	if len(tokens) > 0 && strings.HasPrefix(tokens[0], "/") {
 		env.Msg.Command = string((tokens[0])[1:])                                                   // Get the first token and strip off the prefix
 		data.Message.Text = strings.Trim(strings.Replace(data.Message.Text, tokens[0], "", 1), " ") // Replace the command
 	}
@@ -126,38 +144,56 @@ func TelegramTranslate(body []byte) def.SessionData {
 
 	log.Printf("Message: %s | %s", env.Msg.Command, env.Msg.Message)
 
-	return env
+	return env, nil
 }
 
-// Translate to Telegram
+// Helpers for Posting
 
 func HasOptions(env def.SessionData) bool {
 	return len(env.Res.Affordances.Options) > 0 || env.Res.Affordances.Remove
 }
 
-func PrepTelegramInlineKeyboard(options []def.Option) [][]InlineButton {
+func PrepTelegramInlineKeyboard(options []def.Option, colWidth int) [][]InlineButton {
 	var buttons [][]InlineButton
 	var buttonRow []InlineButton
+
+	if colWidth == 0 {
+		colWidth = def.KEYBOARD_WIDTH
+	}
+
 	for i := 0; i < len(options); i++ {
 		buttonRow = append(buttonRow, InlineButton{Text: options[i].Text, Url: options[i].Link})
-		if i%def.KEYBOARD_WIDTH == 0 {
+		if (i+1)%colWidth == 0 {
 			buttons = append(buttons, buttonRow)
 			buttonRow = []InlineButton{}
 		}
+	}
+	// Append any leftover buttons
+	if len(buttonRow) > 0 {
+		buttons = append(buttons, buttonRow)
 	}
 
 	return buttons
 }
 
-func PrepTelegramKeyboard(options []def.Option) [][]KeyButton {
+func PrepTelegramKeyboard(options []def.Option, colWidth int) [][]KeyButton {
 	var buttons [][]KeyButton
 	var buttonRow []KeyButton
+
+	if colWidth == 0 {
+		colWidth = def.KEYBOARD_WIDTH
+	}
+
 	for i := 0; i < len(options); i++ {
 		buttonRow = append(buttonRow, KeyButton{Text: options[i].Text})
-		if i%def.KEYBOARD_WIDTH == 0 {
+		if (i+1)%colWidth == 0 {
 			buttons = append(buttons, buttonRow)
 			buttonRow = []KeyButton{}
 		}
+	}
+	// Append any leftover buttons
+	if len(buttonRow) > 0 {
+		buttons = append(buttons, buttonRow)
 	}
 
 	return buttons
@@ -178,7 +214,7 @@ func PrepTelegramMessage(base TelegramPost, env def.SessionData) []byte {
 		} else if len(env.Res.Affordances.Options) > 0 {
 			if env.Res.Affordances.Inline {
 				var markup InlineMarkup
-				markup.Keyboard = PrepTelegramInlineKeyboard(env.Res.Affordances.Options)
+				markup.Keyboard = PrepTelegramInlineKeyboard(env.Res.Affordances.Options, env.Res.Affordances.ColWidth)
 				var message TelegramInlinePost
 				message.TelegramPost = base
 				message.Markup = markup
@@ -186,7 +222,7 @@ func PrepTelegramMessage(base TelegramPost, env def.SessionData) []byte {
 				log.Printf("Post with Inline Affordance command")
 			} else {
 				var markup ReplyMarkup
-				markup.Keyboard = PrepTelegramKeyboard(env.Res.Affordances.Options)
+				markup.Keyboard = PrepTelegramKeyboard(env.Res.Affordances.Options, env.Res.Affordances.ColWidth)
 				var message TelegramReplyPost
 				message.TelegramPost = base
 				message.Markup = markup
@@ -216,26 +252,39 @@ func PostTelegramMessage(data []byte, telegramId string) bool {
 		log.Printf("Error occurred during post: %v", postErr)
 		return false
 	}
+	if res != nil {
+		defer res.Body.Close()
+	}
 
 	log.Printf("Posted message %s, response %v", string(data), res)
 	return true
 }
 
-func PostTelegram(env def.SessionData) bool {
-	text := Format(env.Res.Message, TelegramPreprocessing, TelegramBold, TelegramItalics, TelegramSuperscript)
+// Post to Telegram
+
+func (t *Telegram) Post(env def.SessionData) bool {
+	var text string
+	var parseMode string
+	if env.Res.ParseMode == def.TELEGRAM_PARSE_MODE_HTML {
+		text = env.Res.Message
+		parseMode = def.TELEGRAM_PARSE_MODE_HTML
+	} else {
+		text = Format(env.Res.Message, TelegramPreprocessing, TelegramBold, TelegramItalics, TelegramSuperscript)
+		parseMode = def.TELEGRAM_PARSE_MODE_MD
+	}
 
 	chunks := Split(text, "\n", 4000)
 
 	var base TelegramPost
 	base.Id = env.User.Id
-	base.ParseMode = def.TELEGRAM_PARSE_MODE
+	base.ParseMode = parseMode
 	base.ReplyId = env.Msg.Id
 
-	// After removing, everything else can continue as per normal
 	for _, chunk := range chunks {
 		base.Text = chunk
 		data := PrepTelegramMessage(base, env)
-		PostTelegramMessage(data, env.Secrets.TELEGRAM_ID)
+		// Use t.BotToken instead of env.Secrets.TELEGRAM_ID
+		PostTelegramMessage(data, t.BotToken)
 	}
 
 	return true
