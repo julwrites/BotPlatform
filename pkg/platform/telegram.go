@@ -110,6 +110,7 @@ func (t *Telegram) Translate(body []byte) (def.SessionData, error) {
 
 	var env def.SessionData
 	env.Type = def.TYPE_TELEGRAM
+	env.Props = make(map[string]interface{})
 
 	var data TelegramRequest
 	err := json.Unmarshal(body, &data)
@@ -149,12 +150,17 @@ func HasOptions(env def.SessionData) bool {
 	return len(env.Res.Affordances.Options) > 0 || env.Res.Affordances.Remove
 }
 
-func PrepTelegramInlineKeyboard(options []def.Option) [][]InlineButton {
+func PrepTelegramInlineKeyboard(options []def.Option, colWidth int) [][]InlineButton {
 	var buttons [][]InlineButton
 	var buttonRow []InlineButton
+
+	if colWidth == 0 {
+		colWidth = def.KEYBOARD_WIDTH
+	}
+
 	for i := 0; i < len(options); i++ {
 		buttonRow = append(buttonRow, InlineButton{Text: options[i].Text, Url: options[i].Link})
-		if i%def.KEYBOARD_WIDTH == 0 {
+		if (i+1)%colWidth == 0 {
 			buttons = append(buttons, buttonRow)
 			buttonRow = []InlineButton{}
 		}
@@ -167,12 +173,17 @@ func PrepTelegramInlineKeyboard(options []def.Option) [][]InlineButton {
 	return buttons
 }
 
-func PrepTelegramKeyboard(options []def.Option) [][]KeyButton {
+func PrepTelegramKeyboard(options []def.Option, colWidth int) [][]KeyButton {
 	var buttons [][]KeyButton
 	var buttonRow []KeyButton
+
+	if colWidth == 0 {
+		colWidth = def.KEYBOARD_WIDTH
+	}
+
 	for i := 0; i < len(options); i++ {
 		buttonRow = append(buttonRow, KeyButton{Text: options[i].Text})
-		if i%def.KEYBOARD_WIDTH == 0 {
+		if (i+1)%colWidth == 0 {
 			buttons = append(buttons, buttonRow)
 			buttonRow = []KeyButton{}
 		}
@@ -200,7 +211,7 @@ func PrepTelegramMessage(base TelegramPost, env def.SessionData) []byte {
 		} else if len(env.Res.Affordances.Options) > 0 {
 			if env.Res.Affordances.Inline {
 				var markup InlineMarkup
-				markup.Keyboard = PrepTelegramInlineKeyboard(env.Res.Affordances.Options)
+				markup.Keyboard = PrepTelegramInlineKeyboard(env.Res.Affordances.Options, env.Res.Affordances.ColWidth)
 				var message TelegramInlinePost
 				message.TelegramPost = base
 				message.Markup = markup
@@ -208,7 +219,7 @@ func PrepTelegramMessage(base TelegramPost, env def.SessionData) []byte {
 				log.Printf("Post with Inline Affordance command")
 			} else {
 				var markup ReplyMarkup
-				markup.Keyboard = PrepTelegramKeyboard(env.Res.Affordances.Options)
+				markup.Keyboard = PrepTelegramKeyboard(env.Res.Affordances.Options, env.Res.Affordances.ColWidth)
 				var message TelegramReplyPost
 				message.TelegramPost = base
 				message.Markup = markup
