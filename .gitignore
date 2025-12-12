@@ -16,3 +16,13 @@
 
 secrets.yaml
 **/test.yaml
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+.DS_Store
