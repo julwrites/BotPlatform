@@ -1,0 +1,63 @@
+{
+  "tools": [
+    {
+      "name": "tasks",
+      "description": "Manage project tasks using the Task Documentation System.",
+      "command": "python3 scripts/tasks.py",
+      "subcommands": [
+        {
+          "name": "list",
+          "description": "List tasks",
+          "args": ["--status", "--category", "--sprint", "--archived"]
+        },
+        {
+          "name": "create",
+          "description": "Create a new task",
+          "args": ["category", "title", "--desc", "--priority", "--type"]
+        },
+        {
+          "name": "update",
+          "description": "Update task status",
+          "args": ["task_id", "status"]
+        },
+        {
+          "name": "show",
+          "description": "Show task details",
+          "args": ["task_id"]
+        },
+        {
+          "name": "context",
+          "description": "Show active tasks",
+          "args": []
+        },
+        {
+          "name": "next",
+          "description": "Suggest next task",
+          "args": []
+        }
+      ]
+    },
+    {
+      "name": "memory",
+      "description": "Manage long-term project memory.",
+      "command": "python3 scripts/memory.py",
+      "subcommands": [
+        {
+          "name": "list",
+          "description": "List memories",
+          "args": ["--tag", "--limit"]
+        },
+        {
+          "name": "create",
+          "description": "Create a new memory",
+          "args": ["title", "content", "--tags"]
+        },
+        {
+          "name": "read",
+          "description": "Read a memory",
+          "args": ["filename"]
+        }
+      ]
+    }
+  ]
+}
