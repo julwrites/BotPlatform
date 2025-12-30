@@ -1,27 +1,29 @@
 ---
-name: Memory System
-description: Store and retrieve long-term project context, architectural decisions, and learnings.
+name: memory
+description: Manage long-term memories using date-based files. Allows creating, listing, and reading memories.
 ---
 
-# Memory System Skill
+# Memory Skill
 
-This skill allows you to interact with the project's long-term memory system using `scripts/memory.py`. Use this to store information that should persist beyond the current session or task.
+This skill allows you to manage long-term memories in `docs/memories/`.
+It uses the `scripts/memory.py` utility.
 
-## Core Commands
-
-### List Memories
-List all stored memories, optionally filtering by tag.
-`python3 scripts/memory.py list [--tag TAG] [--limit N]`
+## Commands
 
 ### Create Memory
-Create a new memory entry. Use this for architectural decisions, important learnings, or project context.
-`python3 scripts/memory.py create "Title" "Content" [--tags "tag1, tag2"]`
+Create a new memory file.
+Command: `python3 scripts/memory.py create "<title>" "<content>" [--tags "tag1,tag2"] [--format json]`
+
+### List Memories
+List recent memories, optionally filtered by tag.
+Command: `python3 scripts/memory.py list [--tag <tag>] [--limit <limit>] [--format json]`
 
 ### Read Memory
-Read the full content of a specific memory.
-`python3 scripts/memory.py read [FILENAME_OR_SLUG]`
+Read a specific memory file.
+Command: `python3 scripts/memory.py read <filename_or_slug> [--format json]`
 
-## Usage Guidelines
-1.  **Check Memory** before starting complex tasks to see if there are relevant past learnings or decisions.
-2.  **Create Memory** when you make a significant architectural decision or learn something that will be useful for future developers (human or AI).
-3.  **Tags** help categorize memories (e.g., `architecture`, `setup`, `bugfix`).
+## Usage Instructions
+- Use `create` to store important architectural decisions, lessons learned, or long-term context.
+- Use `list` to recall past memories.
+- Use `read` to get the full content of a memory.
+- Memories are stored as Markdown files with YAML frontmatter.

@@ -32,7 +32,7 @@ category: foundation             # Category
 type: task                       # task, story, bug, epic (Optional)
 sprint: Sprint 1                 # Iteration identifier (Optional)
 estimate: 3                      # Story points / T-shirt size (Optional)
-dependencies: [TASK-001, TASK-002] # Dependency list
+dependencies: TASK-001, TASK-002 # Comma separated list of IDs (Optional)
 ---
 ```
 
@@ -49,6 +49,10 @@ dependencies: [TASK-001, TASK-002] # Dependency list
 ```markdown
 # [Task Title]
 
+## Task Information
+- **Dependencies**: [List IDs]
+
+## Task Details
 [Description of what needs to be done]
 
 ### Acceptance Criteria
@@ -77,10 +81,6 @@ Use the `scripts/tasks` wrapper to manage tasks.
 # List tasks (can filter by sprint)
 ./scripts/tasks list
 ./scripts/tasks list --sprint "Sprint 1"
-./scripts/tasks list --archived
-
-# Show task details
-./scripts/tasks show [TASK_ID]
 
 # Find the next best task to work on (Smart Agent Mode)
 ./scripts/tasks next
@@ -90,37 +90,10 @@ Use the `scripts/tasks` wrapper to manage tasks.
 ./scripts/tasks update [TASK_ID] review_requested
 ./scripts/tasks update [TASK_ID] verified
 ./scripts/tasks update [TASK_ID] completed
-./scripts/tasks complete [TASK_ID]  # Shortcut for completed
 
-# Managing Dependencies
-./scripts/tasks link [TASK_ID] [DEPENDENCY_ID]   # Add dependency
-./scripts/tasks unlink [TASK_ID] [DEPENDENCY_ID] # Remove dependency
-./scripts/tasks index                            # Generate INDEX.yaml
-
-# Visualization & Validation
-./scripts/tasks visualize (or graph)             # Generate Mermaid graph
-./scripts/tasks validate                         # Check for errors/cycles
-
-# Maintenance
-./scripts/tasks migrate                          # Migrate legacy tasks
-./scripts/tasks archive [TASK_ID]                # Move to archive
-./scripts/tasks delete [TASK_ID]                 # Delete task
-./scripts/tasks install-hooks                    # Install git pre-commit hook
-./scripts/tasks init                             # Initialize directory structure
+# Migrate legacy tasks (if updating from older version)
+./scripts/tasks migrate
 ```
-
-## Dependency Management
-
-### Linking Tasks
-Tasks can have dependencies. Use `link` to establish a relationship.
-```bash
-./scripts/tasks link TASK-B TASK-A  # Task B depends on Task A
-```
-This updates the `dependencies` field in the frontmatter.
-
-### The Index
-The system maintains a dependency index at `docs/tasks/INDEX.yaml`.
-Run `./scripts/tasks index` to regenerate it. This file provides a machine-readable map of all tasks and their relationships.
 
 ## Agile Methodology
 
@@ -134,7 +107,8 @@ This system supports Agile/Scrum workflows for LLM-Human collaboration.
 - Use `estimate: [Value]` (e.g., Fibonacci numbers 1, 2, 3, 5, 8) to size tasks.
 
 ### Auto-Pilot
-- The `./scripts/tasks next` command uses an algorithm to determine the optimal next task based on:
+- The `./scripts/tasks next` command uses an algorithm to determine the optimal
+next task based on:
     1.  Status (In Progress > Pending)
     2.  Dependencies (Unblocked > Blocked)
     3.  Sprint (Current Sprint > Backlog)

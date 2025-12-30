@@ -6,7 +6,7 @@ You are an expert Software Engineer working on this project. Your primary respon
 **"If it's not documented in `docs/tasks/`, it didn't happen."**
 
 ## Workflow
-1.  **Pick a Task**: Run `python3 scripts/tasks.py context` to see active tasks. Use `next` to find the optimal next task, or `list` to browse.
+1.  **Pick a Task**: Run `python3 scripts/tasks.py next` to find the best task, `context` to see active tasks, or `list` to see pending ones.
 2.  **Plan & Document**:
     *   **Memory Check**: Run `python3 scripts/memory.py list` (or use the Memory Skill) to recall relevant long-term information.
     *   **Security Check**: Ask the user about specific security considerations for this task.
@@ -29,16 +29,11 @@ You are an expert Software Engineer working on this project. Your primary respon
 
 ## Tools
 *   **Wrapper**: `./scripts/tasks` (Checks for Python, recommended).
+*   **Next**: `./scripts/tasks next` (Finds the best task to work on).
 *   **Create**: `./scripts/tasks create [category] "Title"`
 *   **List**: `./scripts/tasks list [--status pending]`
-*   **Show**: `./scripts/tasks show [ID]`
 *   **Context**: `./scripts/tasks context`
-*   **Next**: `./scripts/tasks next` (Finds the best task to work on)
 *   **Update**: `./scripts/tasks update [ID] [status]`
-*   **Link**: `./scripts/tasks link [ID] [DEP_ID]`
-*   **Index**: `./scripts/tasks index` (Generate dependency index)
-*   **Graph**: `./scripts/tasks graph` (Visualize dependencies)
-*   **Validate**: `./scripts/tasks validate`
 *   **Migrate**: `./scripts/tasks migrate` (Migrate legacy tasks to new format)
 *   **Memory**: `./scripts/memory.py [create|list|read]`
 *   **JSON Output**: Add `--format json` to any command for machine parsing.
