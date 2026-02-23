@@ -138,3 +138,26 @@ func TestPrepTelegramMessage(t *testing.T) {
 		}
 	}
 }
+
+func TestTelegramPreprocessing(t *testing.T) {
+	input := "[]()~>#+-=|{}.!"
+	expected := "\\[\\]\\(\\)\\~\\>\\#\\+\\-\\=\\|\\{\\}\\.\\!"
+	output := TelegramPreprocessing(input)
+	if output != expected {
+		t.Errorf("TelegramPreprocessing failed, expected %s, got %s", expected, output)
+	}
+
+	input = "No special characters"
+	expected = "No special characters"
+	output = TelegramPreprocessing(input)
+	if output != expected {
+		t.Errorf("TelegramPreprocessing failed, expected %s, got %s", expected, output)
+	}
+
+	input = "Mixed [special] characters!"
+	expected = "Mixed \\[special\\] characters\\!"
+	output = TelegramPreprocessing(input)
+	if output != expected {
+		t.Errorf("TelegramPreprocessing failed, expected %s, got %s", expected, output)
+	}
+}

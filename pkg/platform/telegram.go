@@ -292,24 +292,26 @@ func (t *Telegram) Post(env def.SessionData) bool {
 
 // Formatting methods
 
-func TelegramPreprocessing(str string) string {
-	str = strings.ReplaceAll(str, "[", "\\[")
-	str = strings.ReplaceAll(str, "]", "\\]")
-	str = strings.ReplaceAll(str, "(", "\\(")
-	str = strings.ReplaceAll(str, ")", "\\)")
-	str = strings.ReplaceAll(str, "~", "\\~")
-	str = strings.ReplaceAll(str, ">", "\\>")
-	str = strings.ReplaceAll(str, "#", "\\#")
-	str = strings.ReplaceAll(str, "+", "\\+")
-	str = strings.ReplaceAll(str, "-", "\\-")
-	str = strings.ReplaceAll(str, "=", "\\=")
-	str = strings.ReplaceAll(str, "|", "\\|")
-	str = strings.ReplaceAll(str, "{", "\\{")
-	str = strings.ReplaceAll(str, "}", "\\}")
-	str = strings.ReplaceAll(str, ".", "\\.")
-	str = strings.ReplaceAll(str, "!", "\\!")
+var telegramReplacer = strings.NewReplacer(
+	"[", "\\[",
+	"]", "\\]",
+	"(", "\\(",
+	")", "\\)",
+	"~", "\\~",
+	">", "\\>",
+	"#", "\\#",
+	"+", "\\+",
+	"-", "\\-",
+	"=", "\\=",
+	"|", "\\|",
+	"{", "\\{",
+	"}", "\\}",
+	".", "\\.",
+	"!", "\\!",
+)
 
-	return str
+func TelegramPreprocessing(str string) string {
+	return telegramReplacer.Replace(str)
 }
 
 func TelegramBold(str string) string {
