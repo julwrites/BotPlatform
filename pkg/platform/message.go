@@ -95,7 +95,7 @@ func Format(str string, preprocess PreprocessingFormatter, bold BoldFormatter, i
 	str = preprocess(str)
 
 	pos := 0
-	for true {
+	for {
 		block := NextFormatBlock(str, pos)
 		if block.Type == Null {
 			break
