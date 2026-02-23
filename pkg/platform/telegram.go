@@ -130,7 +130,7 @@ func (t *Telegram) Translate(body []byte) (def.SessionData, error) {
 		env.User.Type = def.TYPE_INDIVIDUAL
 	}
 
-	log.Printf("User: %s %s | %s : %s", env.User.Firstname, env.User.Lastname, env.User.Username, env.User.Id)
+	log.Printf("User: %s", env.User.Id)
 
 	tokens := strings.Split(data.Message.Text, " ")
 	if len(tokens) > 0 && strings.HasPrefix(tokens[0], "/") {
@@ -142,7 +142,7 @@ func (t *Telegram) Translate(body []byte) (def.SessionData, error) {
 
 	env.Channel = strconv.Itoa(data.Message.Chat.Id)
 
-	log.Printf("Message: %s | %s", env.Msg.Command, env.Msg.Message)
+	log.Printf("Message: %s", env.Msg.Command)
 
 	return env, nil
 }
@@ -256,7 +256,7 @@ func PostTelegramMessage(data []byte, telegramId string) bool {
 		defer res.Body.Close()
 	}
 
-	log.Printf("Posted message %s, response %v", string(data), res)
+	log.Printf("Posted message, response %v", res)
 	return true
 }
 
