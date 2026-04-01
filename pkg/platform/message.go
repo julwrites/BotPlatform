@@ -90,7 +90,7 @@ func NextFormatBlock(str string, offset int) FormatBlock {
 }
 
 func Format(str string, preprocess PreprocessingFormatter, bold BoldFormatter, ita ItalicsFormatter, sup SuperscriptFormatter) string {
-	var outStr string
+	var out strings.Builder
 
 	str = preprocess(str)
 
@@ -101,7 +101,7 @@ func Format(str string, preprocess PreprocessingFormatter, bold BoldFormatter, i
 			break
 		}
 
-		outStr = outStr + str[pos:block.Start]   // Add any text before the formatter
+		out.WriteString(str[pos:block.Start])    // Add any text before the formatter
 		fmtStr := str[block.Start+1 : block.End] // Ignore the symbols
 
 		switch block.Type {
@@ -116,13 +116,13 @@ func Format(str string, preprocess PreprocessingFormatter, bold BoldFormatter, i
 			break
 		}
 
-		outStr = outStr + fmtStr
+		out.WriteString(fmtStr)
 
 		pos = block.End + 1
 	}
 
 	// Any leftovers
-	outStr = outStr + str[pos:]
+	out.WriteString(str[pos:])
 
-	return outStr
+	return out.String()
 }
