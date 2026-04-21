@@ -1,7 +1,6 @@
 package platform
 
 import (
-	"sort"
 	"strings"
 )
 
@@ -50,50 +49,52 @@ type FormatBlock struct {
 	Type  FormatType
 }
 
+var formattypes = []string{
+	string(Bold),
+	string(Italics),
+	string(Superscript),
+}
+
 func NextFormatBlock(str string, offset int) FormatBlock {
-	var candidates []int
-	var formattypes = []string{
-		string(Bold),
-		string(Italics),
-		string(Superscript),
-	}
 	var block FormatBlock
 
+	first := -1
+	var firstF string
 	for _, f := range formattypes {
 		i := strings.Index(str[offset:], f)
-		if i == -1 {
-			continue
+		if i != -1 {
+			idx := i + offset
+			if first == -1 || idx < first {
+				first = idx
+				firstF = f
+			}
 		}
-		candidates = append(candidates, i+offset)
 	}
 
-	if len(candidates) == 0 {
+	if first == -1 {
 		block.Type = Null
 		return block
 	}
 
-	sort.Ints(candidates)
-	c := string(str[candidates[0]])
+	block.Start = first
 
-	block.Start = candidates[0]
-
-	block.End = strings.Index(str[block.Start+1:], c)
+	block.End = strings.Index(str[block.Start+1:], firstF)
 	if block.End == -1 {
 		block.Type = Null
 		return block
 	}
 
 	block.End = block.End + block.Start + 1 // Account for starting offset + 2 markup symbols
-	block.Type = FormatType(c)
+	block.Type = FormatType(firstF)
 
 	return block
 }
 
 func Format(str string, preprocess PreprocessingFormatter, bold BoldFormatter, ita ItalicsFormatter, sup SuperscriptFormatter) string {
-	var outStr string
-
 	str = preprocess(str)
 
+	var builder strings.Builder
+	builder.Grow(len(str))
 	pos := 0
 	for {
 		block := NextFormatBlock(str, pos)
@@ -101,28 +102,25 @@ func Format(str string, preprocess PreprocessingFormatter, bold BoldFormatter, i
 			break
 		}
 
-		outStr = outStr + str[pos:block.Start]   // Add any text before the formatter
-		fmtStr := str[block.Start+1 : block.End] // Ignore the symbols
+		builder.WriteString(str[pos:block.Start]) // Add any text before the formatter
+		fmtStr := str[block.Start+1 : block.End]  // Ignore the symbols
 
 		switch block.Type {
 		case Bold:
 			fmtStr = bold(fmtStr)
-			break
 		case Italics:
 			fmtStr = ita(fmtStr)
-			break
 		case Superscript:
 			fmtStr = sup(fmtStr)
-			break
 		}
 
-		outStr = outStr + fmtStr
+		builder.WriteString(fmtStr)
 
 		pos = block.End + 1
 	}
 
 	// Any leftovers
-	outStr = outStr + str[pos:]
+	builder.WriteString(str[pos:])
 
-	return outStr
+	return builder.String()
 }
